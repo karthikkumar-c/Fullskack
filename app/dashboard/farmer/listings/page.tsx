@@ -13,6 +13,7 @@ import { getListingsByFarmer, createListing, deleteListing, updateListing } from
 import { getLoggedInUser } from "@/lib/auth"
 
 const milletTypes = ["Finger Millet (Ragi)", "Pearl Millet (Bajra)", "Foxtail Millet", "Barnyard Millet", "Little Millet", "Kodo Millet", "Proso Millet", "Sorghum (Jowar)"]
+const taluks = ["Tiruppur", "Dharapuram", "Gobi", "Aravind", "Udumalpet", "Modakurichi", "Palladam", "Pethapur"]
 
 export default function FarmerListings() {
   const [listings, setListings] = useState<any[]>([])
@@ -134,7 +135,13 @@ export default function FarmerListings() {
               </div>
               <div className="space-y-2"><Label>Quantity (kg)</Label><Input type="number" placeholder="Enter quantity" value={newListing.quantity} onChange={(e) => setNewListing({ ...newListing, quantity: e.target.value })} /></div>
               <div className="space-y-2"><Label>Location</Label><Input placeholder="Your location" value={newListing.location} onChange={(e) => setNewListing({ ...newListing, location: e.target.value })} /></div>
-              <div className="space-y-2"><Label>Taluk</Label><Input placeholder="Your taluk" value={newListing.taluk} onChange={(e) => setNewListing({ ...newListing, taluk: e.target.value })} /></div>
+              <div className="space-y-2">
+                <Label>Taluk</Label>
+                <Select value={newListing.taluk} onValueChange={(v) => setNewListing({ ...newListing, taluk: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select taluk" /></SelectTrigger>
+                  <SelectContent>{taluks.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2"><Label>Price per kg (Rs)</Label><Input type="number" placeholder="Enter price" value={newListing.price} onChange={(e) => setNewListing({ ...newListing, price: e.target.value })} /></div>
               <Button onClick={handleAddListing} className="w-full">Add Listing</Button>
             </div>

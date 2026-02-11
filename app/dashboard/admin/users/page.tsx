@@ -19,8 +19,6 @@ export default function AdminUsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [editingUser, setEditingUser] = useState<UserDoc | null>(null)
-  const [editName, setEditName] = useState("")
-  const [editRole, setEditRole] = useState("")
   const [editStatus, setEditStatus] = useState("")
 
   useEffect(() => {
@@ -40,8 +38,8 @@ export default function AdminUsersPage() {
   async function handleUpdate() {
     if (!editingUser) return
     try {
-      await updateUser(editingUser.id!, { name: editName, role: editRole, status: editStatus })
-      toast.success("User updated")
+      await updateUser(editingUser.id!, { status: editStatus })
+      toast.success("User status updated")
       setEditingUser(null)
       const data = await getAllUsers()
       setUsers(data)
@@ -94,12 +92,12 @@ export default function AdminUsersPage() {
                   <TableCell>
                     <div className="flex gap-2">
                       <Dialog>
-                        <DialogTrigger asChild><Button variant="outline" size="sm" onClick={() => { setEditingUser(user); setEditName(user.name); setEditRole(user.role); setEditStatus(user.status || "active") }}><Edit className="h-4 w-4" /></Button></DialogTrigger>
+                        <DialogTrigger asChild><Button variant="outline" size="sm" onClick={() => { setEditingUser(user); setEditStatus(user.status || "active") }}><Edit className="h-4 w-4" /></Button></DialogTrigger>
                         <DialogContent>
-                          <DialogHeader><DialogTitle>Edit User</DialogTitle><DialogDescription>Update user details</DialogDescription></DialogHeader>
+                          <DialogHeader><DialogTitle>Edit User Status</DialogTitle><DialogDescription>Update {user.name}'s account status</DialogDescription></DialogHeader>
                           <div className="space-y-4 py-4">
-                            <div className="space-y-2"><Label>Name</Label><Input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
-                            <div className="space-y-2"><Label>Role</Label><Select value={editRole} onValueChange={setEditRole}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="farmer">Farmer</SelectItem><SelectItem value="shg">SHG</SelectItem><SelectItem value="consumer">Consumer</SelectItem><SelectItem value="admin">Admin</SelectItem></SelectContent></Select></div>
+                            <div className="space-y-2"><Label>Name</Label><p className="text-sm text-muted-foreground font-medium">{user.name}</p></div>
+                            <div className="space-y-2"><Label>Role</Label><p className="text-sm text-muted-foreground font-medium">{user.role}</p></div>
                             <div className="space-y-2"><Label>Status</Label><Select value={editStatus} onValueChange={setEditStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="suspended">Suspended</SelectItem></SelectContent></Select></div>
                           </div>
                           <DialogFooter><Button onClick={handleUpdate}>Save Changes</Button></DialogFooter>
