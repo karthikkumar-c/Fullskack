@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { getListingsByFarmer, createListing, deleteListing } from "@/lib/firestore"
+import { getListingsByFarmer, createListing, deleteListing, updateListing } from "@/lib/firestore"
 import { getLoggedInUser } from "@/lib/auth"
 
 const milletTypes = ["Finger Millet (Ragi)", "Pearl Millet (Bajra)", "Foxtail Millet", "Barnyard Millet", "Little Millet", "Kodo Millet", "Proso Millet", "Sorghum (Jowar)"]
@@ -19,6 +19,10 @@ export default function FarmerListings() {
   const [loading, setLoading] = useState(true)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newListing, setNewListing] = useState({ type: "", quantity: "", location: "", price: "", taluk: "" })
+  const [editingListing, setEditingListing] = useState<any>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editForm, setEditForm] = useState({ quantity: "", price: "" })
+  const [editError, setEditError] = useState("")
 
   const user = getLoggedInUser()
 
@@ -66,6 +70,34 @@ export default function FarmerListings() {
   const handleDeleteListing = async (id: string) => {
     try { await deleteListing(id) } catch (error) { console.log("Error deleting") }
     setListings(listings.filter(l => l.id !== id))
+  }
+
+  const openEditDialog = (listing: any) => {
+    setEditingListing(listing)
+    setEditForm({ quantity: String(listing.quantity), price: String(listing.pricePerKg) })
+    setEditError("")
+    setIsEditDialogOpen(true)
+  }
+
+  const handleEditListing = async () => {
+    if (!editingListing) return
+    const newQty = Number(editForm.quantity)
+    const newPrice = Number(editForm.price)
+
+    if (!newQty || newQty <= 0) { setEditError("Quantity must be greater than 0"); return }
+    if (newQty > editingListing.quantity) { setEditError(`Quantity can only be reduced. Current: ${editingListing.quantity} kg`); return }
+    if (!newPrice || newPrice <= 0) { setEditError("Price must be greater than 0"); return }
+
+    try {
+      await updateListing(editingListing.id, { quantity: newQty, pricePerKg: newPrice })
+      setListings(listings.map(l => l.id === editingListing.id ? { ...l, quantity: newQty, pricePerKg: newPrice } : l))
+      setIsEditDialogOpen(false)
+      setEditingListing(null)
+      setEditError("")
+    } catch (error) {
+      console.error("Error updating listing:", error)
+      setEditError("Failed to update listing. Please try again.")
+    }
   }
 
   const getVerificationBadge = (status: string) => {
@@ -144,7 +176,7 @@ export default function FarmerListings() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button variant="outline" size="sm" className="flex-1 bg-transparent"><Edit className="mr-2 h-3 w-3" />Edit</Button>
+                  <Button variant="outline" size="sm" className="flex-1 bg-transparent" onClick={() => openEditDialog(listing)}><Edit className="mr-2 h-3 w-3" />Edit</Button>
                   <Button variant="outline" size="sm" className="text-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent" onClick={() => handleDeleteListing(listing.id)}><Trash2 className="h-3 w-3" /></Button>
                 </div>
               </CardContent>
@@ -152,6 +184,51 @@ export default function FarmerListings() {
           ))}
         </div>
       )}
+
+      {/* Edit Listing Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Listing</DialogTitle>
+            <DialogDescription>
+              {editingListing?.milletType} — You can reduce quantity and adjust price.
+            </DialogDescription>
+          </DialogHeader>
+          {editingListing && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Quantity (kg)</Label>
+                <Input
+                  type="number"
+                  value={editForm.quantity}
+                  onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
+                  max={editingListing.quantity}
+                  min={1}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Current: {editingListing.quantity} kg — can only be reduced (e.g. after partial sale)
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Price per kg (Rs)</Label>
+                <Input
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  min={1}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Current: Rs {editingListing.pricePerKg}/kg — can be increased or decreased
+                </p>
+              </div>
+              {editError && (
+                <div className="p-2 bg-destructive/10 text-destructive text-sm rounded">{editError}</div>
+              )}
+              <Button onClick={handleEditListing} className="w-full">Save Changes</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
