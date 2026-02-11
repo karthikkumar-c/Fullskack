@@ -20,7 +20,8 @@ export default function FarmerListings() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingListing, setEditingListing] = useState<any>(null)
-  const [editFormData, setEditFormData] = useState({ quantity: "", price: "" })
+  const [editForm, setEditForm] = useState({ quantity: "", price: "" })
+  const [editError, setEditError] = useState("")
   const [newListing, setNewListing] = useState({ type: "", quantity: "", location: "", price: "", taluk: "" })
 
   const user = getLoggedInUser()
@@ -73,47 +74,29 @@ export default function FarmerListings() {
 
   const openEditDialog = (listing: any) => {
     setEditingListing(listing)
-    setEditFormData({ quantity: listing.quantity.toString(), price: listing.pricePerKg.toString() })
+    setEditForm({ quantity: String(listing.quantity), price: String(listing.pricePerKg) })
+    setEditError("")
     setIsEditDialogOpen(true)
   }
 
-  const handleSaveEdit = async () => {
+  const handleEditListing = async () => {
     if (!editingListing) return
-    
-    const newQuantity = Number(editFormData.quantity)
-    const newPrice = Number(editFormData.price)
-    
-    // Validation: Quantity can only be reduced
-    if (newQuantity > editingListing.quantity) {
-      alert("Quantity can only be reduced, not increased")
-      return
-    }
-    
-    // Validation: Quantity cannot be negative
-    if (newQuantity < 0) {
-      alert("Quantity cannot be negative")
-      return
-    }
-    
-    // Validation: Price must be positive
-    if (newPrice <= 0) {
-      alert("Price must be greater than 0")
-      return
-    }
+    const newQty = Number(editForm.quantity)
+    const newPrice = Number(editForm.price)
+
+    if (!newQty || newQty <= 0) { setEditError("Quantity must be greater than 0"); return }
+    if (newQty > editingListing.quantity) { setEditError(`Quantity can only be reduced. Current: ${editingListing.quantity} kg`); return }
+    if (!newPrice || newPrice <= 0) { setEditError("Price must be greater than 0"); return }
 
     try {
-      await updateListing(editingListing.id, { quantity: newQuantity, pricePerKg: newPrice })
-      setListings(listings.map(l => 
-        l.id === editingListing.id 
-          ? { ...l, quantity: newQuantity, pricePerKg: newPrice }
-          : l
-      ))
+      await updateListing(editingListing.id, { quantity: newQty, pricePerKg: newPrice })
+      setListings(listings.map(l => l.id === editingListing.id ? { ...l, quantity: newQty, pricePerKg: newPrice } : l))
       setIsEditDialogOpen(false)
       setEditingListing(null)
-      setEditFormData({ quantity: "", price: "" })
+      setEditError("")
     } catch (error) {
       console.error("Error updating listing:", error)
-      alert("Error updating listing")
+      setEditError("Failed to update listing. Please try again.")
     }
   }
 
@@ -163,35 +146,41 @@ export default function FarmerListings() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Listing</DialogTitle>
-            <DialogDescription>Update quantity (can only reduce) and price for {editingListing?.milletType}</DialogDescription>
+            <DialogDescription>
+              {editingListing?.milletType} — You can reduce quantity and adjust price.
+            </DialogDescription>
           </DialogHeader>
           {editingListing && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Current Quantity: {editingListing.quantity} kg</Label>
-                <Label htmlFor="edit-quantity">New Quantity (kg)</Label>
-                <Input 
-                  id="edit-quantity"
-                  type="number" 
-                  placeholder="Enter new quantity" 
-                  value={editFormData.quantity} 
-                  onChange={(e) => setEditFormData({ ...editFormData, quantity: e.target.value })}
+                <Label>Quantity (kg)</Label>
+                <Input
+                  type="number"
+                  value={editForm.quantity}
+                  onChange={(e) => setEditForm({ ...editForm, quantity: e.target.value })}
                   max={editingListing.quantity}
+                  min={1}
                 />
-                <p className="text-xs text-muted-foreground">You can only reduce the quantity, not increase it</p>
+                <p className="text-xs text-muted-foreground">
+                  Current: {editingListing.quantity} kg — can only be reduced (e.g. after partial sale)
+                </p>
               </div>
               <div className="space-y-2">
-                <Label>Current Price: Rs {editingListing.pricePerKg}/kg</Label>
-                <Label htmlFor="edit-price">New Price per kg (Rs)</Label>
-                <Input 
-                  id="edit-price"
-                  type="number" 
-                  placeholder="Enter new price" 
-                  value={editFormData.price} 
-                  onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}
+                <Label>Price per kg (Rs)</Label>
+                <Input
+                  type="number"
+                  value={editForm.price}
+                  onChange={(e) => setEditForm({ ...editForm, price: e.target.value })}
+                  min={1}
                 />
+                <p className="text-xs text-muted-foreground">
+                  Current: Rs {editingListing.pricePerKg}/kg — can be increased or decreased
+                </p>
               </div>
-              <Button onClick={handleSaveEdit} className="w-full">Save Changes</Button>
+              {editError && (
+                <div className="p-2 bg-destructive/10 text-destructive text-sm rounded">{editError}</div>
+              )}
+              <Button onClick={handleEditListing} className="w-full">Save Changes</Button>
             </div>
           )}
         </DialogContent>
