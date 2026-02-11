@@ -5,8 +5,7 @@ import { Clock, Truck, CheckCircle, Loader2, ShoppingBag } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getOrdersBySeller } from "@/lib/firestore"
-
-const DEMO_FARMER_ID = "farmer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 const statusConfig: Record<string, { label: string; icon: any; color: string }> = {
   placed: { label: "New Order", icon: Clock, color: "bg-accent text-accent-foreground" },
@@ -24,7 +23,9 @@ export default function FarmerOrders() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const ordersData = await getOrdersBySeller(DEMO_FARMER_ID)
+        const user = getLoggedInUser()
+        if (!user) return
+        const ordersData = await getOrdersBySeller(user.id)
         setOrders(ordersData)
       } catch (error) {
         console.error("Error fetching orders:", error)

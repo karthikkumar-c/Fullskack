@@ -4,18 +4,20 @@ import { useState, useEffect } from "react"
 import { ClipboardCheck, CheckCircle, XCircle, Clock, TrendingUp, Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getSHGDashboardStats } from "@/lib/firestore"
-
-const DEMO_SHG_ID = "shg1"
-const DEMO_TALUKS = ["Devanahalli", "Nelamangala"]
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function SHGDashboard() {
   const [stats, setStats] = useState({ pendingCount: 0, verifiedCount: 0, rejectedCount: 0, totalReviewed: 0 })
   const [loading, setLoading] = useState(true)
 
+  const user = getLoggedInUser()
+  const taluks = user?.assignedTaluks || []
+
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getSHGDashboardStats(DEMO_SHG_ID, DEMO_TALUKS)
+        if (!user) return
+        const data = await getSHGDashboardStats(user.id, taluks)
         setStats(data)
       } catch (error) {
         console.error("Error fetching stats:", error)
@@ -41,7 +43,7 @@ export default function SHGDashboard() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-foreground">Welcome, SHG Verifier</h1>
-        <p className="text-muted-foreground">Verify crop quality for farmers in your assigned taluks: {DEMO_TALUKS.join(", ")}</p>
+        <p className="text-muted-foreground">Verify crop quality for farmers in your assigned taluks: {taluks.join(", ") || "None assigned"}</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {statsDisplay.map((stat) => (

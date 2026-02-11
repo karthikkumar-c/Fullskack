@@ -66,6 +66,8 @@ export default function LoginPage() {
         role: userData.role,
         district: userData.district,
         state: userData.state,
+        taluk: userData.taluk || "",
+        assignedTaluks: userData.assignedTaluks || [],
       }))
 
       // Redirect based on role

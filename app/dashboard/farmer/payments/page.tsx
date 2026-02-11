@@ -5,8 +5,7 @@ import { CreditCard, TrendingUp, ArrowDownRight, ArrowUpRight, Wallet, Loader2 }
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getFarmerPayments, getFarmerPaymentStats } from "@/lib/firestore"
-
-const DEMO_FARMER_ID = "farmer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function FarmerPayments() {
   const [payments, setPayments] = useState<any[]>([])
@@ -16,9 +15,11 @@ export default function FarmerPayments() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const user = getLoggedInUser()
+        if (!user) return
         const [paymentsData, statsData] = await Promise.all([
-          getFarmerPayments(DEMO_FARMER_ID),
-          getFarmerPaymentStats(DEMO_FARMER_ID),
+          getFarmerPayments(user.id),
+          getFarmerPaymentStats(user.id),
         ])
         setPayments(paymentsData)
         setPaymentStats(statsData)

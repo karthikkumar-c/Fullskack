@@ -5,8 +5,7 @@ import { Loader2, MapPin, Package, CheckCircle, Truck } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getOrdersForTracking } from "@/lib/firestore"
-
-const DEMO_CONSUMER_ID = "consumer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 const STEPS = [
   { key: "pending", label: "Order Placed", icon: Package },
@@ -27,7 +26,9 @@ export default function TrackingPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const data = await getOrdersForTracking(DEMO_CONSUMER_ID)
+        const user = getLoggedInUser()
+        if (!user) return
+        const data = await getOrdersForTracking(user.id)
         setOrders(data)
       } catch (error) {
         console.error("Error:", error)

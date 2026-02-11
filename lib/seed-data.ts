@@ -1,176 +1,209 @@
-// Seed Data Script - Add this data to Firestore for testing
-// Run this once to populate your database with sample data
+﻿// Seed Data Script for MilletChain - NEW FLOW
+// Collections: users, listings, orders, verifications, disputes, payments
 
-import { 
-  collection, 
-  addDoc, 
-  serverTimestamp,
-  writeBatch,
-  doc
+import {
+  collection, doc, setDoc, addDoc, serverTimestamp, deleteDoc, getDocs
 } from 'firebase/firestore';
 import { db } from './firebase';
 
 // ============================================
-// SAMPLE DATA
+// USERS - Fixed IDs so all references match
 // ============================================
+const users = [
+  // Farmers
+  { id: 'farmer-1', name: 'Ramesh Kumar', phone: '9876543210', email: 'ramesh@example.com', password: 'pass123', role: 'farmer', address: 'Village Road, Bengaluru Rural', district: 'Bengaluru Rural', state: 'Karnataka', pincode: '560001', taluk: 'Devanahalli', verified: true },
+  { id: 'farmer-2', name: 'Suresh Patil', phone: '9876543211', email: 'suresh@example.com', password: 'pass123', role: 'farmer', address: 'Farm House, Tumkur', district: 'Tumkur', state: 'Karnataka', pincode: '572101', taluk: 'Tumkur', verified: true },
+  { id: 'farmer-3', name: 'Lakshmi Devi', phone: '9876543212', email: 'lakshmi@example.com', password: 'pass123', role: 'farmer', address: 'Green Lane, Mysuru', district: 'Mysuru', state: 'Karnataka', pincode: '570001', taluk: 'Mysuru', verified: true },
+  { id: 'farmer-4', name: 'Mahesh Gowda', phone: '9876543213', email: 'mahesh@example.com', password: 'pass123', role: 'farmer', address: 'Rice Mill Road, Hassan', district: 'Hassan', state: 'Karnataka', pincode: '573201', taluk: 'Hassan', verified: true },
+  { id: 'farmer-5', name: 'Anita Sharma', phone: '9876543214', email: 'anita@example.com', password: 'pass123', role: 'farmer', address: 'Temple Street, Mandya', district: 'Mandya', state: 'Karnataka', pincode: '571401', taluk: 'Mandya', verified: true },
+  { id: 'farmer-6', name: 'Venkatesh Rao', phone: '9876543215', email: 'venkatesh@example.com', password: 'pass123', role: 'farmer', address: 'Market Road, Davangere', district: 'Davangere', state: 'Karnataka', pincode: '577001', taluk: 'Davangere', verified: false },
 
-export const sampleFarmers = [
-  { name: "Ramesh Kumar", phone: "9876543210", email: "ramesh@example.com", location: "Bengaluru Rural", district: "Bengaluru Rural", state: "Karnataka", verified: true, totalListings: 5, totalEarnings: 45000 },
-  { name: "Suresh Patil", phone: "9876543211", email: "suresh@example.com", location: "Tumkur", district: "Tumkur", state: "Karnataka", verified: true, totalListings: 3, totalEarnings: 32000 },
-  { name: "Lakshmi Devi", phone: "9876543212", email: "lakshmi@example.com", location: "Mysuru", district: "Mysuru", state: "Karnataka", verified: true, totalListings: 4, totalEarnings: 28000 },
-  { name: "Mahesh Gowda", phone: "9876543213", email: "mahesh@example.com", location: "Hassan", district: "Hassan", state: "Karnataka", verified: true, totalListings: 2, totalEarnings: 18000 },
-  { name: "Anita Sharma", phone: "9876543214", email: "anita@example.com", location: "Mandya", district: "Mandya", state: "Karnataka", verified: true, totalListings: 6, totalEarnings: 52000 },
-  { name: "Venkatesh Rao", phone: "9876543215", email: "venkatesh@example.com", location: "Davangere", district: "Davangere", state: "Karnataka", verified: false, totalListings: 0, totalEarnings: 0 },
-  { name: "Raju Gowda", phone: "9876543216", email: "raju@example.com", location: "Davangere", district: "Davangere", state: "Karnataka", verified: false, totalListings: 0, totalEarnings: 0 },
-];
+  // SHGs
+  { id: 'shg-1', name: 'Mahila SHG', phone: '9876543220', email: 'mahila.shg@example.com', password: 'pass123', role: 'shg', address: 'SHG Office, Bengaluru Rural', district: 'Bengaluru Rural', state: 'Karnataka', pincode: '560001', assignedTaluks: ['Devanahalli', 'Hosakote'], verified: true },
+  { id: 'shg-2', name: 'Green Valley SHG', phone: '9876543221', email: 'greenvalley@example.com', password: 'pass123', role: 'shg', address: 'SHG Center, Tumkur', district: 'Tumkur', state: 'Karnataka', pincode: '572101', assignedTaluks: ['Tumkur', 'Gubbi'], verified: true },
+  { id: 'shg-3', name: 'Sunrise SHG', phone: '9876543222', email: 'sunrise@example.com', password: 'pass123', role: 'shg', address: 'SHG Hall, Mysuru', district: 'Mysuru', state: 'Karnataka', pincode: '570001', assignedTaluks: ['Mysuru', 'Nanjangud'], verified: true },
 
-export const sampleSHGs = [
-  { name: "Mahila SHG", location: "Bengaluru Rural", district: "Bengaluru Rural", state: "Karnataka", members: 15, farmerConnections: 12, verified: true },
-  { name: "Green Valley SHG", location: "Tumkur", district: "Tumkur", state: "Karnataka", members: 12, farmerConnections: 8, verified: true },
-  { name: "Sunrise SHG", location: "Mysuru", district: "Mysuru", state: "Karnataka", members: 18, farmerConnections: 15, verified: true },
-  { name: "Nari Shakti SHG", location: "Hassan", district: "Hassan", state: "Karnataka", members: 10, farmerConnections: 6, verified: true },
-  { name: "Krishi Mahila Group", location: "Mandya", district: "Mandya", state: "Karnataka", members: 14, farmerConnections: 10, verified: true },
-  { name: "Namma Mahila Group", location: "Bellary", district: "Bellary", state: "Karnataka", members: 8, farmerConnections: 0, verified: false },
-];
+  // Consumers
+  { id: 'consumer-1', name: 'Priya Singh', phone: '9876543230', email: 'priya@example.com', password: 'pass123', role: 'consumer', address: '123 MG Road, Bengaluru', district: 'Bengaluru Urban', state: 'Karnataka', pincode: '560001', verified: true },
+  { id: 'consumer-2', name: 'Rahul Verma', phone: '9876543231', email: 'rahul@example.com', password: 'pass123', role: 'consumer', address: '456 Brigade Road, Bengaluru', district: 'Bengaluru Urban', state: 'Karnataka', pincode: '560002', verified: true },
 
-export const sampleListings = [
-  { farmerId: "", farmerName: "Ramesh Kumar", milletType: "Finger Millet (Ragi)", quantity: 200, unit: "kg", location: "Bengaluru Rural", pricePerKg: 45, status: "active", quality: "Premium", harvestDate: "2024-01-10" },
-  { farmerId: "", farmerName: "Suresh Patil", milletType: "Pearl Millet (Bajra)", quantity: 150, unit: "kg", location: "Tumkur", pricePerKg: 38, status: "active", quality: "Standard", harvestDate: "2024-01-08" },
-  { farmerId: "", farmerName: "Lakshmi Devi", milletType: "Foxtail Millet", quantity: 100, unit: "kg", location: "Mysuru", pricePerKg: 52, status: "sold", quality: "Premium", harvestDate: "2024-01-05" },
-  { farmerId: "", farmerName: "Mahesh Gowda", milletType: "Sorghum (Jowar)", quantity: 300, unit: "kg", location: "Hassan", pricePerKg: 35, status: "active", quality: "Standard", harvestDate: "2024-01-12" },
-  { farmerId: "", farmerName: "Anita Sharma", milletType: "Little Millet", quantity: 80, unit: "kg", location: "Mandya", pricePerKg: 48, status: "active", quality: "Premium", harvestDate: "2024-01-15" },
-];
-
-export const sampleProducts = [
-  { name: "Organic Ragi Flour", description: "Stone-ground organic finger millet flour, perfect for rotis and porridge.", shgId: "", shgName: "Mahila SHG", farmerId: "", farmerName: "Ramesh Kumar", batchId: "BATCH001", category: "Flour", pricePerKg: 85, stock: 50, rating: 4.8, location: "Bengaluru Rural", harvestDate: "Dec 2023" },
-  { name: "Pearl Millet Atta Premium", description: "Fine pearl millet flour ideal for traditional rotis and bhakri.", shgId: "", shgName: "Green Valley SHG", farmerId: "", farmerName: "Suresh Patil", batchId: "BATCH002", category: "Flour", pricePerKg: 75, stock: 40, rating: 4.6, location: "Tumkur", harvestDate: "Nov 2023" },
-  { name: "Foxtail Millet Rice", description: "Polished foxtail millet ready to cook, low glycemic index.", shgId: "", shgName: "Sunrise SHG", farmerId: "", farmerName: "Lakshmi Devi", batchId: "BATCH003", category: "Grain", pricePerKg: 120, stock: 30, rating: 4.9, location: "Mysuru", harvestDate: "Jan 2024" },
-  { name: "Millet Mix Pack", description: "Assorted millets combo - includes ragi, bajra, jowar, foxtail, and little millet.", shgId: "", shgName: "Nari Shakti SHG", farmerId: "", farmerName: "Multiple Farmers", batchId: "BATCH004", category: "Mixed", pricePerKg: 150, stock: 25, rating: 4.7, location: "Various", harvestDate: "Dec 2023" },
-  { name: "Jowar Flakes", description: "Crispy sorghum flakes for a healthy breakfast.", shgId: "", shgName: "Krishi Mahila Group", farmerId: "", farmerName: "Mahesh Gowda", batchId: "BATCH005", category: "Ready to Eat", pricePerKg: 95, stock: 60, rating: 4.5, location: "Hassan", harvestDate: "Jan 2024" },
-  { name: "Little Millet Rice", description: "Nutritious little millet, great for pulao and kheer.", shgId: "", shgName: "Mahila SHG", farmerId: "", farmerName: "Anita Sharma", batchId: "BATCH006", category: "Grain", pricePerKg: 110, stock: 35, rating: 4.8, location: "Mandya", harvestDate: "Dec 2023" },
-];
-
-export const sampleOrders = [
-  { productId: "", productName: "Organic Ragi Flour", buyerId: "consumer1", buyerName: "Priya Singh", sellerId: "", sellerName: "Mahila SHG", sellerType: "shg" as const, quantity: 2, unit: "kg", totalPrice: 170, status: "delivered" as const, orderDate: new Date("2024-01-10"), deliveryDate: new Date("2024-01-14") },
-  { productId: "", productName: "Jowar Flakes", buyerId: "consumer1", buyerName: "Priya Singh", sellerId: "", sellerName: "Krishi Mahila Group", sellerType: "shg" as const, quantity: 1, unit: "kg", totalPrice: 95, status: "shipped" as const, orderDate: new Date("2024-01-13") },
-  { productId: "", productName: "Millet Mix Pack", buyerId: "consumer1", buyerName: "Priya Singh", sellerId: "", sellerName: "Nari Shakti SHG", sellerType: "shg" as const, quantity: 1, unit: "pack", totalPrice: 150, status: "processing" as const, orderDate: new Date("2024-01-15") },
-  { productId: "", productName: "Pearl Millet Atta", buyerId: "consumer2", buyerName: "Rahul Verma", sellerId: "", sellerName: "Green Valley SHG", sellerType: "shg" as const, quantity: 3, unit: "kg", totalPrice: 225, status: "delivered" as const, orderDate: new Date("2024-01-05"), deliveryDate: new Date("2024-01-09") },
-  { productId: "", productName: "Foxtail Millet Rice", buyerId: "consumer2", buyerName: "Rahul Verma", sellerId: "", sellerName: "Sunrise SHG", sellerType: "shg" as const, quantity: 2, unit: "kg", totalPrice: 240, status: "delivered" as const, orderDate: new Date("2024-01-01"), deliveryDate: new Date("2024-01-05") },
-];
-
-export const sampleRequests = [
-  { shgId: "", shgName: "Mahila SHG", farmerId: "", farmerName: "Ramesh Kumar", milletType: "Finger Millet", quantity: 50, status: "pending" as const },
-  { shgId: "", shgName: "Green Valley SHG", farmerId: "", farmerName: "Suresh Patil", milletType: "Pearl Millet", quantity: 100, status: "accepted" as const },
-  { shgId: "", shgName: "Sunrise SHG", farmerId: "", farmerName: "Lakshmi Devi", milletType: "Foxtail Millet", quantity: 30, status: "pending" as const },
-];
-
-export const sampleBatches = [
-  { shgId: "", milletType: "Ragi Flour", quantity: 80, stage: "packaging" as const, completion: 85, farmerId: "", farmerName: "Ramesh Kumar" },
-  { shgId: "", milletType: "Bajra Atta", quantity: 60, stage: "processing" as const, completion: 60, farmerId: "", farmerName: "Suresh Patil" },
-  { shgId: "", milletType: "Foxtail Rice", quantity: 40, stage: "quality_check" as const, completion: 95, farmerId: "", farmerName: "Lakshmi Devi" },
+  // Admin
+  { id: 'admin-1', name: 'Admin User', phone: '9876543200', email: 'admin@milletchain.com', password: 'admin123', role: 'admin', address: 'MilletChain HQ, Bengaluru', district: 'Bengaluru Urban', state: 'Karnataka', pincode: '560001', verified: true },
 ];
 
 // ============================================
-// SEED FUNCTION
+// LISTINGS - Farmer crop uploads
 // ============================================
+const listings = [
+  // Farmer 1 listings (Devanahalli taluk)
+  { farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', farmerPhone: '9876543210', milletType: 'Finger Millet (Ragi)', quantity: 200, unit: 'kg', location: 'Bengaluru Rural', taluk: 'Devanahalli', pricePerKg: 45, status: 'active', quality: 'Premium', harvestDate: '2024-01-10', verificationStatus: 'verified', verifiedBy: 'shg-1', verifiedByName: 'Mahila SHG', verifiedImage: '', verificationDate: null, verificationNotes: 'Good quality, fresh harvest' },
+  { farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', farmerPhone: '9876543210', milletType: 'Little Millet', quantity: 100, unit: 'kg', location: 'Bengaluru Rural', taluk: 'Devanahalli', pricePerKg: 55, status: 'active', quality: 'Premium', harvestDate: '2024-01-15', verificationStatus: 'pending', verifiedBy: '', verifiedByName: '', verifiedImage: '', verificationDate: null, verificationNotes: '' },
+
+  // Farmer 2 listings (Tumkur taluk)
+  { farmerId: 'farmer-2', farmerName: 'Suresh Patil', farmerPhone: '9876543211', milletType: 'Pearl Millet (Bajra)', quantity: 150, unit: 'kg', location: 'Tumkur', taluk: 'Tumkur', pricePerKg: 38, status: 'active', quality: 'Standard', harvestDate: '2024-01-08', verificationStatus: 'verified', verifiedBy: 'shg-2', verifiedByName: 'Green Valley SHG', verifiedImage: '', verificationDate: null, verificationNotes: 'Verified, standard quality' },
+
+  // Farmer 3 listings (Mysuru taluk)
+  { farmerId: 'farmer-3', farmerName: 'Lakshmi Devi', farmerPhone: '9876543212', milletType: 'Foxtail Millet', quantity: 100, unit: 'kg', location: 'Mysuru', taluk: 'Mysuru', pricePerKg: 52, status: 'sold', quality: 'Premium', harvestDate: '2024-01-05', verificationStatus: 'verified', verifiedBy: 'shg-3', verifiedByName: 'Sunrise SHG', verifiedImage: '', verificationDate: null, verificationNotes: 'Excellent quality crop' },
+
+  // Farmer 4 listings (Hassan taluk - no SHG assigned here, stays pending)
+  { farmerId: 'farmer-4', farmerName: 'Mahesh Gowda', farmerPhone: '9876543213', milletType: 'Sorghum (Jowar)', quantity: 300, unit: 'kg', location: 'Hassan', taluk: 'Hassan', pricePerKg: 35, status: 'active', quality: 'Standard', harvestDate: '2024-01-12', verificationStatus: 'pending', verifiedBy: '', verifiedByName: '', verifiedImage: '', verificationDate: null, verificationNotes: '' },
+
+  // Farmer 5 listings (Mandya taluk - no SHG assigned, stays pending)
+  { farmerId: 'farmer-5', farmerName: 'Anita Sharma', farmerPhone: '9876543214', milletType: 'Little Millet', quantity: 80, unit: 'kg', location: 'Mandya', taluk: 'Mandya', pricePerKg: 48, status: 'active', quality: 'Premium', harvestDate: '2024-01-15', verificationStatus: 'pending', verifiedBy: '', verifiedByName: '', verifiedImage: '', verificationDate: null, verificationNotes: '' },
+
+  // Farmer 1 rejected listing
+  { farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', farmerPhone: '9876543210', milletType: 'Barnyard Millet', quantity: 50, unit: 'kg', location: 'Bengaluru Rural', taluk: 'Devanahalli', pricePerKg: 40, status: 'active', quality: 'Standard', harvestDate: '2024-01-02', verificationStatus: 'rejected', verifiedBy: 'shg-1', verifiedByName: 'Mahila SHG', verifiedImage: '', verificationDate: null, verificationNotes: 'Quality below standard, moisture content too high' },
+];
+
+// ============================================
+// ORDERS - Consumer buys directly from farmer (only verified listings)
+// ============================================
+const orders = [
+  { listingId: '', productName: 'Finger Millet (Ragi)', buyerId: 'consumer-1', buyerName: 'Priya Singh', buyerPhone: '9876543230', sellerId: 'farmer-1', sellerName: 'Ramesh Kumar', sellerPhone: '9876543210', quantity: 10, unit: 'kg', pricePerKg: 45, totalPrice: 450, status: 'delivered' as const, orderDate: new Date('2024-01-12'), deliveryDate: new Date('2024-01-16'), deliveryAddress: '123 MG Road, Bengaluru' },
+  { listingId: '', productName: 'Pearl Millet (Bajra)', buyerId: 'consumer-1', buyerName: 'Priya Singh', buyerPhone: '9876543230', sellerId: 'farmer-2', sellerName: 'Suresh Patil', sellerPhone: '9876543211', quantity: 5, unit: 'kg', pricePerKg: 38, totalPrice: 190, status: 'shipped' as const, orderDate: new Date('2024-01-14'), deliveryAddress: '123 MG Road, Bengaluru' },
+  { listingId: '', productName: 'Foxtail Millet', buyerId: 'consumer-2', buyerName: 'Rahul Verma', buyerPhone: '9876543231', sellerId: 'farmer-3', sellerName: 'Lakshmi Devi', sellerPhone: '9876543212', quantity: 8, unit: 'kg', pricePerKg: 52, totalPrice: 416, status: 'delivered' as const, orderDate: new Date('2024-01-06'), deliveryDate: new Date('2024-01-10'), deliveryAddress: '456 Brigade Road, Bengaluru' },
+  { listingId: '', productName: 'Finger Millet (Ragi)', buyerId: 'consumer-2', buyerName: 'Rahul Verma', buyerPhone: '9876543231', sellerId: 'farmer-1', sellerName: 'Ramesh Kumar', sellerPhone: '9876543210', quantity: 20, unit: 'kg', pricePerKg: 45, totalPrice: 900, status: 'placed' as const, orderDate: new Date('2024-01-16'), deliveryAddress: '456 Brigade Road, Bengaluru' },
+  { listingId: '', productName: 'Pearl Millet (Bajra)', buyerId: 'consumer-1', buyerName: 'Priya Singh', buyerPhone: '9876543230', sellerId: 'farmer-2', sellerName: 'Suresh Patil', sellerPhone: '9876543211', quantity: 3, unit: 'kg', pricePerKg: 38, totalPrice: 114, status: 'confirmed' as const, orderDate: new Date('2024-01-15'), deliveryAddress: '123 MG Road, Bengaluru' },
+];
+
+// ============================================
+// VERIFICATIONS - SHG verification history
+// ============================================
+const verifications = [
+  { listingId: '', farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', milletType: 'Finger Millet (Ragi)', quantity: 200, shgId: 'shg-1', shgName: 'Mahila SHG', taluk: 'Devanahalli', status: 'verified' as const, verifiedImage: '', notes: 'Good quality, fresh harvest', verifiedAt: new Date('2024-01-11') },
+  { listingId: '', farmerId: 'farmer-2', farmerName: 'Suresh Patil', milletType: 'Pearl Millet (Bajra)', quantity: 150, shgId: 'shg-2', shgName: 'Green Valley SHG', taluk: 'Tumkur', status: 'verified' as const, verifiedImage: '', notes: 'Verified, standard quality', verifiedAt: new Date('2024-01-09') },
+  { listingId: '', farmerId: 'farmer-3', farmerName: 'Lakshmi Devi', milletType: 'Foxtail Millet', quantity: 100, shgId: 'shg-3', shgName: 'Sunrise SHG', taluk: 'Mysuru', status: 'verified' as const, verifiedImage: '', notes: 'Excellent quality crop', verifiedAt: new Date('2024-01-06') },
+  { listingId: '', farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', milletType: 'Barnyard Millet', quantity: 50, shgId: 'shg-1', shgName: 'Mahila SHG', taluk: 'Devanahalli', status: 'rejected' as const, verifiedImage: '', notes: 'Quality below standard, moisture content too high', verifiedAt: new Date('2024-01-03') },
+];
+
+// ============================================
+// DISPUTES - Consumer complaints
+// ============================================
+const disputes = [
+  { orderId: '', consumerId: 'consumer-2', consumerName: 'Rahul Verma', farmerId: 'farmer-3', farmerName: 'Lakshmi Devi', productName: 'Foxtail Millet', reason: 'Quality Issue', description: 'Received slightly different grain size than expected', status: 'open' as const, priority: 'medium' as const, resolvedAt: null, resolution: '' },
+  { orderId: '', consumerId: 'consumer-1', consumerName: 'Priya Singh', farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', productName: 'Finger Millet (Ragi)', reason: 'Late Delivery', description: 'Order was delivered 3 days late', status: 'resolved' as const, priority: 'low' as const, resolvedAt: new Date('2024-01-18'), resolution: 'Partial refund issued, farmer warned' },
+];
+
+// ============================================
+// PAYMENTS - Farmer payment records
+// ============================================
+const payments = [
+  { orderId: '', farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', amount: 450, status: 'completed' as const, method: 'UPI', paidAt: new Date('2024-01-17'), buyerName: 'Priya Singh', productName: 'Finger Millet (Ragi)' },
+  { orderId: '', farmerId: 'farmer-3', farmerName: 'Lakshmi Devi', amount: 416, status: 'completed' as const, method: 'Bank Transfer', paidAt: new Date('2024-01-11'), buyerName: 'Rahul Verma', productName: 'Foxtail Millet' },
+  { orderId: '', farmerId: 'farmer-2', farmerName: 'Suresh Patil', amount: 190, status: 'pending' as const, method: 'UPI', paidAt: null, buyerName: 'Priya Singh', productName: 'Pearl Millet (Bajra)' },
+  { orderId: '', farmerId: 'farmer-1', farmerName: 'Ramesh Kumar', amount: 900, status: 'pending' as const, method: 'UPI', paidAt: null, buyerName: 'Rahul Verma', productName: 'Finger Millet (Ragi)' },
+];
+
+// ============================================
+// CLEAR + SEED FUNCTION
+// ============================================
+
+async function clearCollection(name: string) {
+  const snap = await getDocs(collection(db, name));
+  const promises = snap.docs.map(d => deleteDoc(doc(db, name, d.id)));
+  await Promise.all(promises);
+  console.log(` Cleared ${snap.size} docs from ${name}`);
+}
 
 export async function seedDatabase() {
-  console.log("🌱 Starting database seeding...");
-  
+  console.log(' Starting database seeding...');
+
   try {
-    // Add Farmers
-    console.log("Adding farmers...");
-    const farmerIds: string[] = [];
-    for (const farmer of sampleFarmers) {
-      const docRef = await addDoc(collection(db, 'farmers'), {
-        ...farmer,
+    // 1. Clear old data
+    console.log('Clearing old data...');
+    const collectionsToClean = ['users', 'listings', 'orders', 'verifications', 'disputes', 'payments'];
+    for (const c of collectionsToClean) {
+      await clearCollection(c);
+    }
+
+    // 2. Seed users with FIXED IDs (setDoc)
+    console.log('Adding users...');
+    for (const u of users) {
+      const { id, ...data } = u;
+      await setDoc(doc(db, 'users', id), {
+        ...data,
         createdAt: serverTimestamp(),
       });
-      farmerIds.push(docRef.id);
     }
-    console.log(`✅ Added ${farmerIds.length} farmers`);
+    console.log(` Added ${users.length} users`);
 
-    // Add SHGs
-    console.log("Adding SHGs...");
-    const shgIds: string[] = [];
-    for (const shg of sampleSHGs) {
-      const docRef = await addDoc(collection(db, 'shgs'), {
-        ...shg,
+    // 3. Seed listings (addDoc, store IDs for cross-references)
+    console.log('Adding listings...');
+    const listingIds: string[] = [];
+    for (const l of listings) {
+      const ref = await addDoc(collection(db, 'listings'), {
+        ...l,
         createdAt: serverTimestamp(),
       });
-      shgIds.push(docRef.id);
+      listingIds.push(ref.id);
     }
-    console.log(`✅ Added ${shgIds.length} SHGs`);
+    console.log(` Added ${listings.length} listings`);
 
-    // Add Listings (with farmer IDs)
-    console.log("Adding listings...");
-    for (let i = 0; i < sampleListings.length; i++) {
-      const listing = {
-        ...sampleListings[i],
-        farmerId: farmerIds[i % farmerIds.length],
+    // 4. Seed verifications (link to listing IDs)
+    // listing[0] = farmer-1 ragi verified, listing[2] = farmer-2 bajra verified,
+    // listing[3] = farmer-3 foxtail verified, listing[6] = farmer-1 barnyard rejected
+    const verificationListingMap = [0, 2, 3, 6]; // indices into listingIds
+    console.log('Adding verifications...');
+    for (let i = 0; i < verifications.length; i++) {
+      const v = verifications[i];
+      await addDoc(collection(db, 'verifications'), {
+        ...v,
+        listingId: listingIds[verificationListingMap[i]] || '',
         createdAt: serverTimestamp(),
-      };
-      await addDoc(collection(db, 'listings'), listing);
+      });
     }
-    console.log(`✅ Added ${sampleListings.length} listings`);
+    console.log(` Added ${verifications.length} verifications`);
 
-    // Add Products (with SHG and farmer IDs)
-    console.log("Adding products...");
-    const productIds: string[] = [];
-    for (let i = 0; i < sampleProducts.length; i++) {
-      const product = {
-        ...sampleProducts[i],
-        shgId: shgIds[i % shgIds.length],
-        farmerId: farmerIds[i % farmerIds.length],
+    // 5. Seed orders (link to listing IDs for verified listings)
+    // order[0] = ragi from farmer-1 (listing 0), order[1] = bajra from farmer-2 (listing 2),
+    // order[2] = foxtail from farmer-3 (listing 3), order[3] = ragi from farmer-1 (listing 0),
+    // order[4] = bajra from farmer-2 (listing 2)
+    const orderListingMap = [0, 2, 3, 0, 2];
+    console.log('Adding orders...');
+    const orderIds: string[] = [];
+    for (let i = 0; i < orders.length; i++) {
+      const o = orders[i];
+      const ref = await addDoc(collection(db, 'orders'), {
+        ...o,
+        listingId: listingIds[orderListingMap[i]] || '',
+      });
+      orderIds.push(ref.id);
+    }
+    console.log(` Added ${orders.length} orders`);
+
+    // 6. Seed disputes (link to order IDs)
+    // dispute[0]  order[2] (foxtail delivered), dispute[1]  order[0] (ragi delivered)
+    const disputeOrderMap = [2, 0];
+    console.log('Adding disputes...');
+    for (let i = 0; i < disputes.length; i++) {
+      const d = disputes[i];
+      await addDoc(collection(db, 'disputes'), {
+        ...d,
+        orderId: orderIds[disputeOrderMap[i]] || '',
         createdAt: serverTimestamp(),
-      };
-      const docRef = await addDoc(collection(db, 'products'), product);
-      productIds.push(docRef.id);
+      });
     }
-    console.log(`✅ Added ${productIds.length} products`);
+    console.log(` Added ${disputes.length} disputes`);
 
-    // Add Orders
-    console.log("Adding orders...");
-    for (let i = 0; i < sampleOrders.length; i++) {
-      const order = {
-        ...sampleOrders[i],
-        productId: productIds[i % productIds.length],
-        sellerId: shgIds[i % shgIds.length],
-      };
-      await addDoc(collection(db, 'orders'), order);
-    }
-    console.log(`✅ Added ${sampleOrders.length} orders`);
-
-    // Add Requests
-    console.log("Adding requests...");
-    for (let i = 0; i < sampleRequests.length; i++) {
-      const request = {
-        ...sampleRequests[i],
-        shgId: shgIds[i % shgIds.length],
-        farmerId: farmerIds[i % farmerIds.length],
+    // 7. Seed payments (link to order IDs)
+    // payment[0]  order[0] (ragi delivered), payment[1]  order[2] (foxtail delivered),
+    // payment[2]  order[1] (bajra shipped), payment[3]  order[3] (ragi placed)
+    const paymentOrderMap = [0, 2, 1, 3];
+    console.log('Adding payments...');
+    for (let i = 0; i < payments.length; i++) {
+      const p = payments[i];
+      await addDoc(collection(db, 'payments'), {
+        ...p,
+        orderId: orderIds[paymentOrderMap[i]] || '',
         createdAt: serverTimestamp(),
-      };
-      await addDoc(collection(db, 'requests'), request);
+      });
     }
-    console.log(`✅ Added ${sampleRequests.length} requests`);
+    console.log(` Added ${payments.length} payments`);
 
-    // Add Batches
-    console.log("Adding batches...");
-    for (let i = 0; i < sampleBatches.length; i++) {
-      const batch = {
-        ...sampleBatches[i],
-        shgId: shgIds[i % shgIds.length],
-        farmerId: farmerIds[i % farmerIds.length],
-        createdAt: serverTimestamp(),
-      };
-      await addDoc(collection(db, 'batches'), batch);
-    }
-    console.log(`✅ Added ${sampleBatches.length} batches`);
-
-    console.log("🎉 Database seeding completed successfully!");
+    console.log(' Database seeding completed successfully!');
     return { success: true };
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+    console.error(' Error seeding database:', error);
     return { success: false, error };
   }
 }

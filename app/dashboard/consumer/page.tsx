@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { getConsumerDashboardStats, getVerifiedListings, getOrdersByBuyer } from "@/lib/firestore"
-
-const DEMO_CONSUMER_ID = "consumer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function ConsumerDashboard() {
   const [stats, setStats] = useState({ cropsAvailable: 0, yourOrders: 0, activeDeliveries: 0 })
@@ -18,10 +17,12 @@ export default function ConsumerDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const user = getLoggedInUser()
+        if (!user) return
         const [statsData, crops, orders] = await Promise.all([
-          getConsumerDashboardStats(DEMO_CONSUMER_ID),
+          getConsumerDashboardStats(user.id),
           getVerifiedListings(),
-          getOrdersByBuyer(DEMO_CONSUMER_ID),
+          getOrdersByBuyer(user.id),
         ])
         setStats(statsData)
         setFeaturedCrops(crops.slice(0, 4))

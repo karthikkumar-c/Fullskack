@@ -10,9 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { getVerifiedListings, createOrder } from "@/lib/firestore"
-
-const DEMO_CONSUMER_ID = "consumer1"
-const DEMO_CONSUMER_NAME = "Priya Sharma"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function BrowseCropsPage() {
   const [crops, setCrops] = useState<any[]>([])
@@ -45,6 +43,8 @@ export default function BrowseCropsPage() {
 
   async function handleBuy() {
     if (!selectedCrop || !buyQuantity) return
+    const user = getLoggedInUser()
+    if (!user) return
     const qty = parseFloat(buyQuantity)
     if (isNaN(qty) || qty <= 0 || qty > selectedCrop.quantity) {
       toast.error("Invalid quantity")
@@ -54,9 +54,9 @@ export default function BrowseCropsPage() {
     try {
       await createOrder({
         listingId: selectedCrop.id,
-        buyerId: DEMO_CONSUMER_ID,
-        buyerName: DEMO_CONSUMER_NAME,
-        buyerPhone: "9876543210",
+        buyerId: user.id,
+        buyerName: user.name,
+        buyerPhone: user.phone,
         sellerId: selectedCrop.farmerId,
         sellerName: selectedCrop.farmerName,
         sellerPhone: "",
