@@ -10,8 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { getListingsByFarmer, createListing, deleteListing } from "@/lib/firestore"
+import { getLoggedInUser } from "@/lib/auth"
 
-const DEMO_FARMER_ID = "farmer1"
 const milletTypes = ["Finger Millet (Ragi)", "Pearl Millet (Bajra)", "Foxtail Millet", "Barnyard Millet", "Little Millet", "Kodo Millet", "Proso Millet", "Sorghum (Jowar)"]
 
 export default function FarmerListings() {
@@ -20,10 +20,13 @@ export default function FarmerListings() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [newListing, setNewListing] = useState({ type: "", quantity: "", location: "", price: "", taluk: "" })
 
+  const user = getLoggedInUser()
+
   useEffect(() => {
     async function fetchData() {
       try {
-        const listingsData = await getListingsByFarmer(DEMO_FARMER_ID)
+        if (!user) return
+        const listingsData = await getListingsByFarmer(user.id)
         setListings(listingsData)
       } catch (error) {
         console.error("Error fetching listings:", error)
@@ -36,17 +39,18 @@ export default function FarmerListings() {
   }, [])
 
   const handleAddListing = async () => {
+    if (!user) return
     if (newListing.type && newListing.quantity && newListing.location && newListing.price && newListing.taluk) {
       try {
         const newId = await createListing({
-          farmerId: DEMO_FARMER_ID, farmerName: "Ramesh Kumar", farmerPhone: "9876543001",
+          farmerId: user.id, farmerName: user.name, farmerPhone: user.phone,
           milletType: newListing.type, quantity: Number(newListing.quantity), unit: "kg",
           location: newListing.location, taluk: newListing.taluk, pricePerKg: Number(newListing.price),
           status: "active", quality: "Grade A", harvestDate: new Date().toISOString().split('T')[0],
           verificationStatus: "pending", verifiedBy: "", verifiedByName: "",
           verifiedImage: "", verificationDate: null, verificationNotes: "",
         })
-        const added = { id: newId, farmerId: DEMO_FARMER_ID, farmerName: "Ramesh Kumar", milletType: newListing.type,
+        const added = { id: newId, farmerId: user.id, farmerName: user.name, milletType: newListing.type,
           quantity: Number(newListing.quantity), unit: "kg", location: newListing.location, taluk: newListing.taluk,
           pricePerKg: Number(newListing.price), status: "active", quality: "Grade A",
           verificationStatus: "pending", verifiedBy: "", verifiedByName: "", verifiedImage: "", verificationNotes: "" }

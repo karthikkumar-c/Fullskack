@@ -6,8 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { getOrdersByBuyer } from "@/lib/firestore"
-
-const DEMO_CONSUMER_ID = "consumer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function ConsumerOrdersPage() {
   const [orders, setOrders] = useState<any[]>([])
@@ -16,7 +15,9 @@ export default function ConsumerOrdersPage() {
   useEffect(() => {
     async function fetchOrders() {
       try {
-        const data = await getOrdersByBuyer(DEMO_CONSUMER_ID)
+        const user = getLoggedInUser()
+        if (!user) return
+        const data = await getOrdersByBuyer(user.id)
         setOrders(data)
       } catch (error) {
         console.error("Error:", error)

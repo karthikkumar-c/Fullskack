@@ -10,10 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { getPendingVerifications, verifyListing } from "@/lib/firestore"
-
-const DEMO_SHG_ID = "shg1"
-const DEMO_SHG_NAME = "Mahila Shakti SHG"
-const DEMO_TALUKS = ["Devanahalli", "Nelamangala"]
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function SHGPendingVerifications() {
   const [listings, setListings] = useState<any[]>([])
@@ -22,10 +19,13 @@ export default function SHGPendingVerifications() {
   const [verifyNotes, setVerifyNotes] = useState("")
   const [imageUrl, setImageUrl] = useState("")
 
+  const user = getLoggedInUser()
+  const taluks = user?.assignedTaluks || []
+
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getPendingVerifications(DEMO_TALUKS)
+        const data = await getPendingVerifications(taluks)
         setListings(data)
       } catch (error) {
         console.error("Error:", error)
@@ -37,8 +37,9 @@ export default function SHGPendingVerifications() {
   }, [])
 
   const handleVerify = async (listing: any, status: "verified" | "rejected") => {
+    if (!user) return
     try {
-      await verifyListing(listing.id, DEMO_SHG_ID, DEMO_SHG_NAME, status, verifyNotes, imageUrl || "/placeholder.jpg", listing.farmerName, listing.milletType, listing.quantity, listing.taluk, listing.farmerId)
+      await verifyListing(listing.id, user.id, user.name, status, verifyNotes, imageUrl || "/placeholder.jpg", listing.farmerName, listing.milletType, listing.quantity, listing.taluk, listing.farmerId)
       setListings(listings.filter(l => l.id !== listing.id))
       setVerifyNotes("")
       setImageUrl("")

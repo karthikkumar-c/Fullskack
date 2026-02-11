@@ -4,8 +4,7 @@ import { useEffect, useState } from "react"
 import { Package, CheckCircle, Clock, Truck, CreditCard, TrendingUp, Loader2 } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getFarmerDashboardStats, getOrdersBySeller } from "@/lib/firestore"
-
-const DEMO_FARMER_ID = "farmer1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function FarmerDashboard() {
   const [stats, setStats] = useState({ activeListings: 0, verifiedListings: 0, pendingVerification: 0, activeOrders: 0, totalEarnings: 0 })
@@ -15,9 +14,11 @@ export default function FarmerDashboard() {
   useEffect(() => {
     async function fetchData() {
       try {
+        const user = getLoggedInUser()
+        if (!user) return
         const [dashboardStats, orders] = await Promise.all([
-          getFarmerDashboardStats(DEMO_FARMER_ID),
-          getOrdersBySeller(DEMO_FARMER_ID),
+          getFarmerDashboardStats(user.id),
+          getOrdersBySeller(user.id),
         ])
         setStats(dashboardStats)
         setRecentOrders(orders.slice(0, 5))

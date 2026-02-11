@@ -5,8 +5,7 @@ import { CheckCircle, XCircle, Loader2, FileText } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getVerificationHistory } from "@/lib/firestore"
-
-const DEMO_SHG_ID = "shg1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function SHGVerificationHistory() {
   const [verifications, setVerifications] = useState<any[]>([])
@@ -15,7 +14,9 @@ export default function SHGVerificationHistory() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getVerificationHistory(DEMO_SHG_ID)
+        const user = getLoggedInUser()
+        if (!user) return
+        const data = await getVerificationHistory(user.id)
         setVerifications(data)
       } catch (error) {
         console.error("Error:", error)

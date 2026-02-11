@@ -5,8 +5,7 @@ import { CheckCircle, MapPin, Loader2, Package } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getVerifiedByShg } from "@/lib/firestore"
-
-const DEMO_SHG_ID = "shg1"
+import { getLoggedInUser } from "@/lib/auth"
 
 export default function SHGVerifiedCrops() {
   const [listings, setListings] = useState<any[]>([])
@@ -15,7 +14,9 @@ export default function SHGVerifiedCrops() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const data = await getVerifiedByShg(DEMO_SHG_ID)
+        const user = getLoggedInUser()
+        if (!user) return
+        const data = await getVerifiedByShg(user.id)
         setListings(data)
       } catch (error) {
         console.error("Error:", error)
