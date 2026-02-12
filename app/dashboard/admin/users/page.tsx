@@ -88,7 +88,7 @@ export default function AdminUsersPage() {
                   <TableCell className="text-muted-foreground">{user.email}</TableCell>
                   <TableCell><Badge variant="outline">{user.role}</Badge></TableCell>
                   <TableCell className="text-muted-foreground">{user.district || "N/A"}</TableCell>
-                  <TableCell><Badge variant={user.status === "active" ? "default" : "secondary"}>{user.status || "active"}</Badge></TableCell>
+                  <TableCell><Badge className={user.status === "active" ? "bg-green-500 text-white hover:bg-green-600" : "bg-red-500 text-white hover:bg-red-600"}>{user.status || "active"}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Dialog>
