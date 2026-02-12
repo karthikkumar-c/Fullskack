@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Clock, Truck, CheckCircle, Loader2, ShoppingBag } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getOrdersBySeller } from "@/lib/firestore"
+import { Button } from "@/components/ui/button"
+import { getOrdersBySeller, updateOrderStatus } from "@/lib/firestore"
 import { getLoggedInUser } from "@/lib/auth"
 
 const statusConfig: Record<string, { label: string; icon: any; color: string }> = {
@@ -19,6 +20,7 @@ const statusConfig: Record<string, { label: string; icon: any; color: string }> 
 export default function FarmerOrders() {
   const [orders, setOrders] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -35,6 +37,24 @@ export default function FarmerOrders() {
     }
     fetchData()
   }, [])
+
+  const nextStatus: Record<string, { next: string; label: string }> = {
+    placed: { next: "confirmed", label: "Confirm Order" },
+    confirmed: { next: "processing", label: "Start Processing" },
+    processing: { next: "shipped", label: "Mark as Shipped" },
+  }
+
+  const handleUpdateStatus = async (orderId: string, newStatus: string) => {
+    setUpdatingId(orderId)
+    try {
+      await updateOrderStatus(orderId, newStatus)
+      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+    } catch (error) {
+      console.error("Error updating order:", error)
+    } finally {
+      setUpdatingId(null)
+    }
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
@@ -70,6 +90,7 @@ export default function FarmerOrders() {
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Quantity</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Amount</th>
                   <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Action</th>
                 </tr></thead>
                 <tbody>
                   {orders.map((order) => {
@@ -82,6 +103,15 @@ export default function FarmerOrders() {
                         <td className="py-3 px-4 text-sm text-foreground">{order.quantity} {order.unit}</td>
                         <td className="py-3 px-4 text-sm font-medium text-primary">Rs {order.totalPrice}</td>
                         <td className="py-3 px-4"><Badge className={status.color}><status.icon className="mr-1 h-3 w-3" />{status.label}</Badge></td>
+                        <td className="py-3 px-4">
+                          {nextStatus[order.status] ? (
+                            <Button size="sm" disabled={updatingId === order.id} onClick={() => handleUpdateStatus(order.id, nextStatus[order.status].next)}>
+                              {updatingId === order.id ? "Updating..." : nextStatus[order.status].label}
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
                       </tr>
                     )
                   })}
