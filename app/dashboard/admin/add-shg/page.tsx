@@ -8,8 +8,30 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "sonner"
 import { createUser } from "@/lib/firestore"
+
+// Taluk list for Erode district and surrounding areas
+const AVAILABLE_TALUKS = [
+  "Avinashi",
+  "Palladam",
+  "Udumalaipettai",
+  "Dharapuram",
+  "Kangeyam",
+  "Madathukulam",
+  "Uthukuli",
+  "Erode",
+  "Perundurai",
+  "Gobi",
+  "Sathyamangalam",
+  "Bhavani",
+  "Anthiyur",
+  "Kodumudi",
+  "Modakurichi",
+  "Nambiyur",
+  "Thalavadi",
+]
 
 export default function AddSHGPage() {
   const router = useRouter()
@@ -24,27 +46,19 @@ export default function AddSHGPage() {
     state: "Karnataka",
     pincode: "",
   })
-  const [talukInput, setTalukInput] = useState("")
+  const [selectedTaluk, setSelectedTaluk] = useState("")
   const [assignedTaluks, setAssignedTaluks] = useState<string[]>([])
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
 
   const addTaluk = () => {
-    const trimmed = talukInput.trim()
-    if (trimmed && !assignedTaluks.includes(trimmed)) {
-      setAssignedTaluks([...assignedTaluks, trimmed])
-      setTalukInput("")
+    if (selectedTaluk && !assignedTaluks.includes(selectedTaluk)) {
+      setAssignedTaluks([...assignedTaluks, selectedTaluk])
+      setSelectedTaluk("")
     }
   }
 
   const removeTaluk = (taluk: string) => {
     setAssignedTaluks(assignedTaluks.filter((t) => t !== taluk))
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      addTaluk()
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,10 +171,23 @@ export default function AddSHGPage() {
               {/* Assigned Taluks */}
               <div className="space-y-2">
                 <Label>Assigned Taluks <span className="text-destructive">*</span></Label>
-                <p className="text-xs text-muted-foreground">Add taluks this SHG will be responsible for verifying crops in</p>
+                <p className="text-xs text-muted-foreground">Select taluks this SHG will be responsible for verifying crops in</p>
                 <div className="flex gap-2">
-                  <Input placeholder="Type a taluk name and press Enter" value={talukInput} onChange={(e) => setTalukInput(e.target.value)} onKeyDown={handleKeyDown} />
-                  <Button type="button" variant="outline" onClick={addTaluk} className="shrink-0"><Plus className="h-4 w-4" /></Button>
+                  <Select value={selectedTaluk} onValueChange={setSelectedTaluk}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Select a taluk" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {AVAILABLE_TALUKS.map((taluk) => (
+                        <SelectItem key={taluk} value={taluk} disabled={assignedTaluks.includes(taluk)}>
+                          {taluk}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" onClick={addTaluk} className="shrink-0" disabled={!selectedTaluk}>
+                    <Plus className="h-4 w-4" />
+                  </Button>
                 </div>
                 {assignedTaluks.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">

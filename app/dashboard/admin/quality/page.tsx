@@ -5,18 +5,38 @@ import { Loader2, MapPin, Plus, X } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { getAllUsers, updateUser, type UserDoc } from "@/lib/firestore"
+
+// Taluk list for assignments
+const AVAILABLE_TALUKS = [
+  "Avinashi",
+  "Palladam",
+  "Udumalaipettai",
+  "Dharapuram",
+  "Kangeyam",
+  "Madathukulam",
+  "Uthukuli",
+  "Erode",
+  "Perundurai",
+  "Gobichettipalayam (Gobi)",
+  "Sathyamangalam",
+  "Bhavani",
+  "Anthiyur",
+  "Kodumudi",
+  "Modakurichi",
+  "Nambiyur",
+  "Thalavadi",
+]
 
 export default function SHGTalukAssignmentPage() {
   const [shgs, setShgs] = useState<UserDoc[]>([])
   const [loading, setLoading] = useState(true)
   const [editingSHG, setEditingSHG] = useState<UserDoc | null>(null)
-  const [newTaluk, setNewTaluk] = useState("")
+  const [selectedTaluk, setSelectedTaluk] = useState("")
   const [editTaluks, setEditTaluks] = useState<string[]>([])
 
   useEffect(() => {
@@ -34,11 +54,10 @@ export default function SHGTalukAssignmentPage() {
   }, [])
 
   function addTaluk() {
-    const t = newTaluk.trim()
-    if (!t) return
-    if (editTaluks.includes(t)) { toast.error("Taluk already assigned"); return }
-    setEditTaluks([...editTaluks, t])
-    setNewTaluk("")
+    if (!selectedTaluk) return
+    if (editTaluks.includes(selectedTaluk)) { toast.error("Taluk already assigned"); return }
+    setEditTaluks([...editTaluks, selectedTaluk])
+    setSelectedTaluk("")
   }
 
   function removeTaluk(taluk: string) {
@@ -90,7 +109,7 @@ export default function SHGTalukAssignmentPage() {
                     <TableCell><Badge variant={shg.status === "active" ? "default" : "secondary"}>{shg.status || "active"}</Badge></TableCell>
                     <TableCell>
                       <Dialog>
-                        <DialogTrigger asChild><Button variant="outline" size="sm" onClick={() => { setEditingSHG(shg); setEditTaluks(shg.assignedTaluks || []); setNewTaluk("") }}>Edit Taluks</Button></DialogTrigger>
+                        <DialogTrigger asChild><Button variant="outline" size="sm" onClick={() => { setEditingSHG(shg); setEditTaluks(shg.assignedTaluks || []); setSelectedTaluk("") }}>Edit Taluks</Button></DialogTrigger>
                         <DialogContent>
                           <DialogHeader><DialogTitle>Assign Taluks to {shg.name}</DialogTitle><DialogDescription>Add or remove taluk assignments for this SHG</DialogDescription></DialogHeader>
                           <div className="space-y-4 py-4">
@@ -100,8 +119,19 @@ export default function SHGTalukAssignmentPage() {
                               ))}
                             </div>
                             <div className="flex gap-2">
-                              <Input placeholder="Enter taluk name" value={newTaluk} onChange={(e) => setNewTaluk(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTaluk() } }} />
-                              <Button variant="outline" size="sm" onClick={addTaluk}><Plus className="h-4 w-4" /></Button>
+                              <Select value={selectedTaluk} onValueChange={setSelectedTaluk}>
+                                <SelectTrigger className="flex-1">
+                                  <SelectValue placeholder="Select a taluk" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {AVAILABLE_TALUKS.map((taluk) => (
+                                    <SelectItem key={taluk} value={taluk} disabled={editTaluks.includes(taluk)}>
+                                      {taluk}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button variant="outline" size="sm" onClick={addTaluk} disabled={!selectedTaluk}><Plus className="h-4 w-4" /></Button>
                             </div>
                           </div>
                           <DialogFooter><Button onClick={handleSave}>Save Assignments</Button></DialogFooter>

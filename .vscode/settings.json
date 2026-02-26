@@ -10,6 +10,5 @@
   },
   "editor.quickSuggestions": {
     "strings": true
-  },
-  "git.ignoreLimitWarning": true
+  }
 }

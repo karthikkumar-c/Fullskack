@@ -42,6 +42,7 @@ export default function FarmerOrders() {
     placed: { next: "confirmed", label: "Confirm Order" },
     confirmed: { next: "processing", label: "Start Processing" },
     processing: { next: "shipped", label: "Mark as Shipped" },
+    shipped: { next: "delivered", label: "Mark as Delivered" },
   }
 
   const handleUpdateStatus = async (orderId: string, newStatus: string) => {

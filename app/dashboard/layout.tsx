@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import type { ReactNode } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import type { ReactNode } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   Wheat,
   Home,
@@ -20,21 +20,19 @@ import {
   CheckSquare,
   BarChart3,
   UserPlus,
-  Brain,
-  Zap,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 interface DashboardLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const pathname = usePathname();
-
+  const pathname = usePathname()
+  
   // Get current role from pathname
-  const role = pathname.split("/")[2] || "farmer";
+  const role = pathname.split("/")[2] || "farmer"
 
   return (
     <div className="min-h-screen bg-background flex">
@@ -46,7 +44,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <span className="text-xl font-bold">MilletChain</span>
           </Link>
         </div>
-
+        
         <nav className="flex-1 p-4">
           <div className="mb-4">
             <p className="text-xs uppercase tracking-wider text-sidebar-foreground/60 mb-2">
@@ -61,10 +59,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <div className="p-4 border-t border-sidebar-border">
           <Link href="/login">
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-            >
+            <Button variant="ghost" className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
@@ -94,21 +89,22 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
 
         {/* Main Content */}
-        <main className="flex-1 p-4 md:p-8 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-8 overflow-auto">
+          {children}
+        </main>
       </div>
     </div>
-  );
+  )
 }
 
 interface NavProps {
-  role: string;
-  pathname: string;
+  role: string
+  pathname: string
 }
 
 function DashboardNav({ role, pathname }: NavProps) {
-  const navItems = getNavItems(role);
-  const aiItems = getAIItems(role);
-
+  const navItems = getNavItems(role)
+  
   return (
     <ul className="space-y-1">
       {navItems.map((item) => (
@@ -119,7 +115,7 @@ function DashboardNav({ role, pathname }: NavProps) {
               "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
               pathname === item.href
                 ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+                : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -127,45 +123,16 @@ function DashboardNav({ role, pathname }: NavProps) {
           </Link>
         </li>
       ))}
-
-      {/* AI Features Section */}
-      {aiItems.length > 0 && (
-        <>
-          <li className="pt-4 pb-2">
-            <p className="text-xs uppercase tracking-wider text-sidebar-foreground/60 px-3 font-semibold">
-              AI Features
-            </p>
-          </li>
-          {aiItems.map((item) => (
-            <li key={item.href}>
-              <Link
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                  pathname === item.href
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
-                )}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </>
-      )}
     </ul>
-  );
+  )
 }
 
 function MobileNav({ role, pathname }: NavProps) {
-  const navItems = getNavItems(role);
-  const aiItems = getAIItems(role);
-  const allItems = [...navItems, ...aiItems];
-
+  const navItems = getNavItems(role)
+  
   return (
     <div className="flex gap-2">
-      {allItems.map((item) => (
+      {navItems.map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -173,7 +140,7 @@ function MobileNav({ role, pathname }: NavProps) {
             "flex items-center gap-2 px-3 py-2 rounded-md text-sm whitespace-nowrap transition-colors",
             pathname === item.href
               ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
           )}
         >
           <item.icon className="h-4 w-4" />
@@ -181,119 +148,42 @@ function MobileNav({ role, pathname }: NavProps) {
         </Link>
       ))}
     </div>
-  );
+  )
 }
 
 function getNavItems(role: string) {
   const baseItems = [
     { href: `/dashboard/${role}`, label: "Overview", icon: Home },
-  ];
+  ]
 
-  const roleSpecificItems: Record<
-    string,
-    Array<{ href: string; label: string; icon: typeof Home }>
-  > = {
+  const roleSpecificItems: Record<string, Array<{ href: string; label: string; icon: typeof Home }>> = {
     farmer: [
       { href: `/dashboard/farmer`, label: "Overview", icon: Home },
-      {
-        href: `/dashboard/farmer/listings`,
-        label: "My Listings",
-        icon: Package,
-      },
+      { href: `/dashboard/farmer/listings`, label: "My Listings", icon: Package },
       { href: `/dashboard/farmer/orders`, label: "Orders", icon: Truck },
-      {
-        href: `/dashboard/farmer/payments`,
-        label: "Payments",
-        icon: CreditCard,
-      },
+      { href: `/dashboard/farmer/payments`, label: "Payments", icon: CreditCard },
     ],
     shg: [
       { href: `/dashboard/shg`, label: "Overview", icon: Home },
-      {
-        href: `/dashboard/shg/farmers`,
-        label: "Pending Verifications",
-        icon: ClipboardCheck,
-      },
-      {
-        href: `/dashboard/shg/orders`,
-        label: "Verified Crops",
-        icon: CheckSquare,
-      },
-      {
-        href: `/dashboard/shg/batches`,
-        label: "Verification History",
-        icon: FileText,
-      },
+      { href: `/dashboard/shg/farmers`, label: "Pending Verifications", icon: ClipboardCheck },
+      { href: `/dashboard/shg/orders`, label: "Verified Crops", icon: CheckSquare },
+      { href: `/dashboard/shg/batches`, label: "Verification History", icon: FileText },
     ],
     consumer: [
       { href: `/dashboard/consumer`, label: "Overview", icon: Home },
-      {
-        href: `/dashboard/consumer/products`,
-        label: "Browse Crops",
-        icon: Store,
-      },
-      {
-        href: `/dashboard/consumer/orders`,
-        label: "My Orders",
-        icon: ShoppingBag,
-      },
-      {
-        href: `/dashboard/consumer/tracking`,
-        label: "Track Orders",
-        icon: MapPin,
-      },
+      { href: `/dashboard/consumer/products`, label: "Browse Crops", icon: Store },
+      { href: `/dashboard/consumer/orders`, label: "My Orders", icon: ShoppingBag },
+      { href: `/dashboard/consumer/tracking`, label: "Track Orders", icon: MapPin },
     ],
     admin: [
       { href: `/dashboard/admin`, label: "Overview", icon: Home },
       { href: `/dashboard/admin/users`, label: "User Management", icon: Users },
       { href: `/dashboard/admin/add-shg`, label: "Add SHG", icon: UserPlus },
-      {
-        href: `/dashboard/admin/quality`,
-        label: "SHG-Taluk Assignment",
-        icon: MapPin,
-      },
-      {
-        href: `/dashboard/admin/batches`,
-        label: "Disputes",
-        icon: ClipboardCheck,
-      },
-      {
-        href: `/dashboard/admin/analytics`,
-        label: "Analytics",
-        icon: BarChart3,
-      },
+      { href: `/dashboard/admin/quality`, label: "SHG-Taluk Assignment", icon: MapPin },
+      { href: `/dashboard/admin/batches`, label: "Disputes", icon: ClipboardCheck },
+      { href: `/dashboard/admin/analytics`, label: "Analytics", icon: BarChart3 },
     ],
-  };
+  }
 
-  return roleSpecificItems[role] || baseItems;
-}
-
-function getAIItems(role: string) {
-  const aiItems: Record<
-    string,
-    Array<{ href: string; label: string; icon: typeof Home }>
-  > = {
-    farmer: [
-      {
-        href: `/dashboard/farmer/ai-pricing`,
-        label: "Price Guidance",
-        icon: Brain,
-      },
-      {
-        href: `/dashboard/farmer/ai-demand`,
-        label: "Demand Forecast",
-        icon: Zap,
-      },
-    ],
-    consumer: [],
-    admin: [
-      {
-        href: `/dashboard/admin/market-insights`,
-        label: "Market Insights",
-        icon: Brain,
-      },
-    ],
-  };
-
-  return aiItems[role] || [];
+  return roleSpecificItems[role] || baseItems
 }
